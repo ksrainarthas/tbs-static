@@ -33,6 +33,6 @@ dependencies {
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
 
 //    implementation project(':tbs')
-    implementation 'io.github.shichuanenhui:cordova-static:1.0.0'
+//    implementation 'io.github.shichuanenhui:cordova-static:1.0.0'
     implementation 'io.github.ksrainarthas:tbs-static:1.0.0'
 }
