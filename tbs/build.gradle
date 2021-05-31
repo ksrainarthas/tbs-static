@@ -28,3 +28,9 @@ android {
 dependencies {
     api fileTree(dir: 'libs', include: ['*.aar', '*.jar'])
 }
+
+ext {
+    libArtifactId = 'tbs-static'
+}
+
+apply from: '../maven.gradle'

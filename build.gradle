@@ -3,10 +3,18 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath "com.android.tools.build:gradle:4.2.1"
+        classpath 'com.tencent.mm:AndResGuard-gradle-plugin:1.2.21'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath 'org.jetbrains.dokka:dokka-gradle-plugin:1.4.30'
 
+        // 选用加解密算法库, 默认实现了xor和aes-cbc两种简单算法, 也可以使用自己的加解密库。
+        classpath 'com.github.megatronking.stringfog:gradle-plugin:2.2.1'
+        classpath 'com.github.megatronking.stringfog:aes-cbc:1.1.0'
+        classpath 'com.github.megatronking.stringfog:xor:1.1.0'
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
     }
@@ -17,6 +25,10 @@ allprojects {
         google()
         mavenCentral()
         jcenter() // Warning: this repository is going to shut down soon
+    }
+    project.ext {
+        libVersion = '1.0.0'
+        libGroupId = 'io.github.ksrainarthas'
     }
 }
 

@@ -1,0 +1,118 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+def pom_version = project.ext.libVersion
+def pom_groupId = project.ext.libGroupId
+def pom_artifactId = libArtifactId
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+tasks.withType(Javadoc) {
+    options.addStringOption('Xdoclint:none', '-quiet')
+    options.addStringOption('encoding', 'UTF-8')
+    options.addStringOption('charSet', 'UTF-8')
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    from javadoc.destinationDir
+    archiveClassifier.convention('javadoc')
+    archiveClassifier.set('javadoc')
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    archiveClassifier.convention('sources')
+    archiveClassifier.set('sources')
+}
+
+ext["signing.keyId"] = ''
+ext["signing.password"] = ''
+ext["signing.secretKeyRingFile"] = ''
+ext["ossrhUsername"] = ''
+ext["ossrhPassword"] = ''
+
+File secretPropsFile = project.rootProject.file('local.properties')
+if (secretPropsFile.exists()) {
+    println "Found secret props file, loading props"
+    Properties p = new Properties()
+    p.load(new FileInputStream(secretPropsFile))
+    p.each { name, value ->
+        ext[name] = value
+    }
+} else {
+    println "No props file, loading env vars"
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            version pom_version
+            groupId pom_groupId
+            artifactId pom_artifactId
+
+            artifact("$buildDir/outputs/aar/${project.getName()}-release.aar")
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom {
+                packaging = 'aar'
+                name = pom_artifactId
+                description = 'tbs-static'
+                url = 'https://github.com/ksrainarthas/tbs-static'
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'ksrainarthas'
+                        name = 'ksrainarthas'
+                        email = '525766914@qq.com'
+                    }
+                }
+                scm {
+                    connection = 'scm:git:github.com/ksrainarthas/tbs-static.git'
+                    developerConnection = 'scm:git:ssh://github.com/ksrainarthas/tbs-static.git'
+                    url = 'https://github.com/ksrainarthas/tbs-static'
+                }
+                withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+                    ext.addDependency = { Dependency dep, String scope ->
+                        if (dep.group != null || dep.version != null || dep.name != null) {
+                            if (dep.group != "unspecified" && dep.name != "unspecified" && dep.version != "unspecified") {
+                                def dependencyNode = dependenciesNode.appendNode('dependency')
+                                dependencyNode.appendNode('groupId', dep.group)
+                                dependencyNode.appendNode('artifactId', dep.name)
+                                dependencyNode.appendNode('version', dep.version)
+                                dependencyNode.appendNode('scope', scope)
+                            }
+                        }
+                    }
+
+                    configurations.compile.getDependencies().each { dep -> addDependency(dep, "compile") }
+                    configurations.api.getDependencies().each { dep -> addDependency(dep, "compile") }
+                    configurations.implementation.getDependencies().each { dep -> addDependency(dep, "runtime") }
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "mavenCentral"
+            url = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
+            credentials {
+                username ossrhUsername
+                password ossrhPassword
+            }
+        }
+    }
+}
+signing {
+    sign publishing.publications
+}
