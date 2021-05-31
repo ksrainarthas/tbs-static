@@ -1,0 +1,3 @@
+rootProject.name = "StaticTbs"
+include ':app'
+include ':tbs'
